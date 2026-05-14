@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write  # Tämä on tärkeä muutos!
   pages: write
   id-token: write
 

@@ -35,3 +35,7 @@ jobs:
 
       - name: Julkaise sivu
         uses: actions/deploy-pages@v4
+
+        # Tämä askel tekee tyhjän commitin, jos koodiin ei ole tullut muutoksia vähään aikaan
+      - name: Keepalive Workflow
+        uses: gautamkrishnar/keepalive-workflow@v1

@@ -5,16 +5,15 @@ on:
     - cron: '55 3 * * 1-5'
   workflow_dispatch:
 
-permissions:
-  contents: write  # Tämä on tärkeä muutos!
-  pages: write
-  id-token: write
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Lisää tämä rivi
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Hae koodi
         uses: actions/checkout@v4
@@ -38,6 +37,11 @@ jobs:
       - name: Julkaise sivu
         uses: actions/deploy-pages@v4
 
-    # Tämä askel tekee tyhjän commitin, jos koodiin ei ole tullut muutoksia vähään aikaan
-    #  - name: Keepalive Workflow
-    #    uses: gautamkrishnar/keepalive-workflow@v1
+  keepalive-job:
+    name: Keepalive Workflow
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2

@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def hae_kanresta():
     try:
@@ -82,6 +82,8 @@ def hae_apila():
 
 # Generoidaan lopullinen HTML
 pvm = datetime.now().strftime("%d.%m.%Y")
+paivitysaika = (datetime.utcnow() + timedelta(hours=3)).strftime("%d.%m.%Y klo %H:%M")
+
 html = f"""
 <!DOCTYPE html>
 <html lang="fi">
@@ -96,6 +98,7 @@ html = f"""
         h2 {{ color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 5px; }}
         ul {{ padding-left: 20px; }}
         li {{ margin-bottom: 5px; }}
+        .footer {{ text-align: center; color: #666; font-size: 0.9em; margin-top: 30px; }}
     </style>
 </head>
 <body>
@@ -103,6 +106,7 @@ html = f"""
     <div class="card"><h2>Ravintola Apila</h2>{hae_apila()}</div>
     <div class="card"><h2>Medipolis</h2>{hae_medipolis()}</div>
     <div class="card"><h2>Kaupunginsairaala</h2>{hae_kanresta()}</div>
+    <div class="footer">Tiedot päivitetty: {paivitysaika}</div>
 </body>
 </html>
 """

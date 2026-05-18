@@ -3,7 +3,7 @@ name: Hae ja julkaise ruokalistat
 on:
   schedule:
     #- cron: '0 7 * * *'
-    - cron: '55 3 * * *'
+    - cron: '17 1 * * *'
   workflow_dispatch:
 
 jobs:

@@ -80,6 +80,32 @@ def hae_apila():
         return "<ul>" + "".join(tulos) + "</ul>"
     except: return "Virhe haussa"
 
+def hae_kielo():
+    try:
+        url = "https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Kielo/Restaurant.aspx"
+        vastaus = requests.get(url, timeout=10)
+        soup = BeautifulSoup(vastaus.content, "html.parser")
+        # Haetaan vain ensimmäinen päiväpaneeli (Tänään)
+        paneeli = soup.find("div", class_="DayDataPanel")
+        if not paneeli: return "Ei listaa saatavilla"
+        
+        tulos = []
+        ateriarivit = paneeli.find_all("div", class_="emenu_tab_panel_row")
+        for rivi in ateriarivit:
+            nimi = rivi.find("span", id=lambda x: x and "MenuName" in x)
+            ruoat = rivi.find_all("span", id=lambda x: x and "SecureLabelDish" in x)
+            dietti = rivi.find_all("span", id=lambda x: x and "SecureLabelDiets" in x)
+            
+            ruokalista = []
+            for r, d in zip(ruoat, dietti):
+                if r.text.strip():
+                    ruokalista.append(f"{r.text.strip()} ({d.text.strip()})")
+            
+            if ruokalista:
+                tulos.append(f"<li><strong>{nimi.text.strip()}:</strong> {', '.join(ruokalista)}</li>")
+        return "<ul>" + "".join(tulos) + "</ul>"
+    except: return "Virhe haussa"
+
 # Generoidaan lopullinen HTML
 pvm = datetime.now().strftime("%d.%m.%Y")
 paivitysaika = (datetime.utcnow() + timedelta(hours=3)).strftime("%d.%m.%Y klo %H:%M")
@@ -103,6 +129,7 @@ html = f"""
 </head>
 <body>
     <h1>Lounaslistat {pvm}</h1>
+    <div class="card"><h2>Ravintola Kielo</h2>{hae_kielo()}</div>
     <div class="card"><h2>Ravintola Apila</h2>{hae_apila()}</div>
     <div class="card"><h2>Medipolis</h2>{hae_medipolis()}</div>
     <div class="card"><h2>Kaupunginsairaala</h2>{hae_kanresta()}</div>

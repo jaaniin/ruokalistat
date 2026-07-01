@@ -59,7 +59,6 @@ def hae_apila():
         url = "https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Apila/Restaurant.aspx"
         vastaus = requests.get(url, timeout=10)
         soup = BeautifulSoup(vastaus.content, "html.parser")
-        # Haetaan vain ensimmäinen päiväpaneeli (Tänään)
         paneeli = soup.find("div", class_="DayDataPanel")
         if not paneeli: return "Ei listaa saatavilla"
         
@@ -85,7 +84,6 @@ def hae_kielo():
         url = "https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Kielo/Restaurant.aspx"
         vastaus = requests.get(url, timeout=10)
         soup = BeautifulSoup(vastaus.content, "html.parser")
-        # Haetaan vain ensimmäinen päiväpaneeli (Tänään)
         paneeli = soup.find("div", class_="DayDataPanel")
         if not paneeli: return "Ei listaa saatavilla"
         
@@ -121,7 +119,9 @@ html = f"""
         body {{ font-family: sans-serif; line-height: 1.4; padding: 20px; background: #f4f4f4; }}
         .card {{ background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
         h1 {{ color: #333; }}
-        h2 {{ color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 5px; }}
+        h2 {{ color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 0; }}
+        h2 a {{ color: inherit; text-decoration: none; }}
+        h2 a:hover {{ text-decoration: underline; }}
         ul {{ padding-left: 20px; }}
         li {{ margin-bottom: 5px; }}
         .footer {{ text-align: center; color: #666; font-size: 0.9em; margin-top: 30px; }}
@@ -129,10 +129,22 @@ html = f"""
 </head>
 <body>
     <h1>Lounaslistat {pvm}</h1>
-    <div class="card"><h2>Ravintola Kielo</h2>{hae_kielo()}</div>
-    <div class="card"><h2>Ravintola Apila</h2>{hae_apila()}</div>
-    <div class="card"><h2>Medipolis</h2>{hae_medipolis()}</div>
-    <div class="card"><h2>Kaupunginsairaala</h2>{hae_kanresta()}</div>
+    <div class="card">
+        <h2><a href="https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Kielo/Restaurant.aspx" target="_blank" rel="noopener noreferrer">Ravintola Kielo</a></h2>
+        {hae_kielo()}
+    </div>
+    <div class="card">
+        <h2><a href="https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Apila/Restaurant.aspx" target="_blank" rel="noopener noreferrer">Ravintola Apila</a></h2>
+        {hae_apila()}
+    </div>
+    <div class="card">
+        <h2><a href="https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/oulu/medipolismedusa/" target="_blank" rel="noopener noreferrer">Medipolis</a></h2>
+        {hae_medipolis()}
+    </div>
+    <div class="card">
+        <h2><a href="https://kanresta.fi/ravintolat/oulun-kaupunginsairaala/" target="_blank" rel="noopener noreferrer">Kaupunginsairaala</a></h2>
+        {hae_kanresta()}
+    </div>
     <div class="footer">Tiedot päivitetty: {paivitysaika}</div>
 </body>
 </html>

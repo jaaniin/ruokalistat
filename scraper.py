@@ -2,7 +2,22 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import os
+import sys
 from datetime import datetime, timedelta
+
+pvm = datetime.now().strftime("%d.%m.%Y")
+
+# Tarkistetaan onko sivusto jo päivitetty tänään
+try:
+    live_sivu = requests.get("https://jaaniin.github.io/ruokalistat/", timeout=10)
+    if f"Lounaslistat {pvm}" in live_sivu.text:
+        print("Tiedot on jo haettu tänään. Ei haeta uudestaan.")
+        os.makedirs("public", exist_ok=True)
+        with open("public/index.html", "w", encoding="utf-8") as f:
+            f.write(live_sivu.text)
+        sys.exit(0)
+except:
+    pass
 
 def hae_kanresta():
     try:

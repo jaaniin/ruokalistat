@@ -145,6 +145,10 @@ html = f"""
 <body>
     <h1>Lounaslistat {pvm}</h1>
     <div class="card">
+        <h2><a href="https://kanresta.fi/ravintolat/oulun-kaupunginsairaala/" target="_blank" rel="noopener noreferrer">Kaupunginsairaala</a></h2>
+        {hae_kanresta()}
+    </div>
+    <div class="card">
         <h2><a href="https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Kielo/Restaurant.aspx" target="_blank" rel="noopener noreferrer">Ravintola Kielo</a></h2>
         {hae_kielo()}
     </div>
@@ -155,10 +159,6 @@ html = f"""
     <div class="card">
         <h2><a href="https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/oulu/medipolismedusa/" target="_blank" rel="noopener noreferrer">Medipolis</a></h2>
         {hae_medipolis()}
-    </div>
-    <div class="card">
-        <h2><a href="https://kanresta.fi/ravintolat/oulun-kaupunginsairaala/" target="_blank" rel="noopener noreferrer">Kaupunginsairaala</a></h2>
-        {hae_kanresta()}
     </div>
     <div class="footer">Tiedot päivitetty: {paivitysaika}</div>
 </body>

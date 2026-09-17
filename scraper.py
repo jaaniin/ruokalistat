@@ -75,24 +75,28 @@ def hae_apila():
         vastaus = requests.get(url, timeout=10)
         soup = BeautifulSoup(vastaus.content, "html.parser")
         paneeli = soup.find("div", class_="DayDataPanel")
-        if not paneeli: return "Ei listaa saatavilla"
-        
+        if not paneeli:
+            return "Sivusto on vaihtanut HTML-rakennetta. Vanhoja selektoreita ei löytynyt."
+
         tulos = []
         ateriarivit = paneeli.find_all("div", class_="emenu_tab_panel_row")
         for rivi in ateriarivit:
             nimi = rivi.find("span", id=lambda x: x and "MenuName" in x)
             ruoat = rivi.find_all("span", id=lambda x: x and "SecureLabelDish" in x)
             dietti = rivi.find_all("span", id=lambda x: x and "SecureLabelDiets" in x)
-            
+
             ruokalista = []
             for r, d in zip(ruoat, dietti):
                 if r.text.strip():
                     ruokalista.append(f"{r.text.strip()} ({d.text.strip()})")
-            
-            if ruokalista:
+
+            if ruokalista and nimi:
                 tulos.append(f"<li><strong>{nimi.text.strip()}:</strong> {', '.join(ruokalista)}</li>")
         return "<ul>" + "".join(tulos) + "</ul>"
-    except: return "Virhe haussa"
+    except Exception as e:
+        print(f"hae_apila() virhe: {e}")
+        return "Virhe haussa"
+
 
 def hae_kielo():
     try:
@@ -100,24 +104,27 @@ def hae_kielo():
         vastaus = requests.get(url, timeout=10)
         soup = BeautifulSoup(vastaus.content, "html.parser")
         paneeli = soup.find("div", class_="DayDataPanel")
-        if not paneeli: return "Ei listaa saatavilla"
-        
+        if not paneeli:
+            return "Sivusto on vaihtanut HTML-rakennetta. Vanhoja selektoreita ei löytynyt."
+
         tulos = []
         ateriarivit = paneeli.find_all("div", class_="emenu_tab_panel_row")
         for rivi in ateriarivit:
             nimi = rivi.find("span", id=lambda x: x and "MenuName" in x)
             ruoat = rivi.find_all("span", id=lambda x: x and "SecureLabelDish" in x)
             dietti = rivi.find_all("span", id=lambda x: x and "SecureLabelDiets" in x)
-            
+
             ruokalista = []
             for r, d in zip(ruoat, dietti):
                 if r.text.strip():
                     ruokalista.append(f"{r.text.strip()} ({d.text.strip()})")
-            
-            if ruokalista:
+
+            if ruokalista and nimi:
                 tulos.append(f"<li><strong>{nimi.text.strip()}:</strong> {', '.join(ruokalista)}</li>")
         return "<ul>" + "".join(tulos) + "</ul>"
-    except: return "Virhe haussa"
+    except Exception as e:
+        print(f"hae_kielo() virhe: {e}")
+        return "Virhe haussa"
 
 # Generoidaan lopullinen HTML
 pvm = datetime.now().strftime("%d.%m.%Y")

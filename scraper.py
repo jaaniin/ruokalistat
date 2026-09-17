@@ -69,62 +69,80 @@ def hae_medipolis():
         return "Ei listaa tälle päivälle"
     except: return "Virhe haussa"
 
-def hae_apila():
+AROMI_RESTAURANTS = {
+    "Apila": "2502db2e-45f6-4eb1-9db4-737530dafa00",
+    "Kielo": "4b9d6f01-6a36-4c0c-9261-4285ab9e9b4d",
+}
+
+def hae_aromi_menu(restaurant_name, restaurant_id=None):
     try:
-        url = "https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Apila/Restaurant.aspx"
-        vastaus = requests.get(url, timeout=10)
-        soup = BeautifulSoup(vastaus.content, "html.parser")
-        paneeli = soup.find("div", class_="DayDataPanel")
-        if not paneeli:
-            return "Sivusto on vaihtanut HTML-rakennetta. Vanhoja selektoreita ei löytynyt."
+        if not restaurant_id:
+            restaurant_id = AROMI_RESTAURANTS.get(restaurant_name)
+
+        if not restaurant_id:
+            info_url = "https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/_/api/Common/Page/GetPageInfo"
+            res = requests.get(info_url, headers={"Accept": "application/json"}, timeout=10)
+            for r in res.json().get("Restaurants", []):
+                if r.get("UniqueCode", "").lower() == restaurant_name.lower():
+                    restaurant_id = r.get("Id")
+                    break
+
+        if not restaurant_id:
+            return "Ravintolan tunnistetta ei löytynyt"
+
+        tanaan = datetime.now().strftime("%Y-%m-%d")
+        headers = {"Accept": "application/json"}
+
+        # 1. Haetaan ruokailijaryhmät (Diner groups)
+        dg_url = f"https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/{restaurant_name}/api/GetRestaurantPublicDinerGroups?id={restaurant_id}&startDate={tanaan}&endDate={tanaan}"
+        dg_res = requests.get(dg_url, headers=headers, timeout=10)
+        dg_data = dg_res.json()
+
+        if not dg_data:
+            return "Ei listaa tälle päivälle"
+
+        diner_group = dg_data[0]
+        diner_group["SuitabilityDietIds"] = []
+
+        # 2. Haetaan päivän ateriat
+        meals_url = f"https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/{restaurant_name}/api/Common/Restaurant/RestaurantMeals?Id={restaurant_id}&StartDate={tanaan}&EndDate={tanaan}"
+        meals_res = requests.post(meals_url, json=diner_group, headers=headers, timeout=10)
+        meals_data = meals_res.json()
+
+        if not meals_data:
+            return "Ei listaa tälle päivälle"
 
         tulos = []
-        ateriarivit = paneeli.find_all("div", class_="emenu_tab_panel_row")
-        for rivi in ateriarivit:
-            nimi = rivi.find("span", id=lambda x: x and "MenuName" in x)
-            ruoat = rivi.find_all("span", id=lambda x: x and "SecureLabelDish" in x)
-            dietti = rivi.find_all("span", id=lambda x: x and "SecureLabelDiets" in x)
+        for day in meals_data:
+            for meal in day.get("Meals", []):
+                nimi = meal.get("MealName", "").strip()
+                ruokalista = []
+                for dish in meal.get("Dishes", []):
+                    dish_name = dish.get("DishName", "").strip()
+                    dietti = dish.get("DietDetails", "").strip()
+                    if dish_name:
+                        if dietti:
+                            ruokalista.append(f"{dish_name} ({dietti})")
+                        else:
+                            ruokalista.append(dish_name)
 
-            ruokalista = []
-            for r, d in zip(ruoat, dietti):
-                if r.text.strip():
-                    ruokalista.append(f"{r.text.strip()} ({d.text.strip()})")
+                if ruokalista and nimi:
+                    tulos.append(f"<li><strong>{nimi}:</strong> {', '.join(ruokalista)}</li>")
 
-            if ruokalista and nimi:
-                tulos.append(f"<li><strong>{nimi.text.strip()}:</strong> {', '.join(ruokalista)}</li>")
-        return "<ul>" + "".join(tulos) + "</ul>"
+        if tulos:
+            return "<ul>" + "".join(tulos) + "</ul>"
+        return "Ei listaa tälle päivälle"
     except Exception as e:
-        print(f"hae_apila() virhe: {e}")
+        print(f"hae_{restaurant_name.lower()}() virhe: {e}")
         return "Virhe haussa"
+
+
+def hae_apila():
+    return hae_aromi_menu("Apila", AROMI_RESTAURANTS.get("Apila"))
 
 
 def hae_kielo():
-    try:
-        url = "https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Kielo/Restaurant.aspx"
-        vastaus = requests.get(url, timeout=10)
-        soup = BeautifulSoup(vastaus.content, "html.parser")
-        paneeli = soup.find("div", class_="DayDataPanel")
-        if not paneeli:
-            return "Sivusto on vaihtanut HTML-rakennetta. Vanhoja selektoreita ei löytynyt."
-
-        tulos = []
-        ateriarivit = paneeli.find_all("div", class_="emenu_tab_panel_row")
-        for rivi in ateriarivit:
-            nimi = rivi.find("span", id=lambda x: x and "MenuName" in x)
-            ruoat = rivi.find_all("span", id=lambda x: x and "SecureLabelDish" in x)
-            dietti = rivi.find_all("span", id=lambda x: x and "SecureLabelDiets" in x)
-
-            ruokalista = []
-            for r, d in zip(ruoat, dietti):
-                if r.text.strip():
-                    ruokalista.append(f"{r.text.strip()} ({d.text.strip()})")
-
-            if ruokalista and nimi:
-                tulos.append(f"<li><strong>{nimi.text.strip()}:</strong> {', '.join(ruokalista)}</li>")
-        return "<ul>" + "".join(tulos) + "</ul>"
-    except Exception as e:
-        print(f"hae_kielo() virhe: {e}")
-        return "Virhe haussa"
+    return hae_aromi_menu("Kielo", AROMI_RESTAURANTS.get("Kielo"))
 
 # Generoidaan lopullinen HTML
 pvm = datetime.now().strftime("%d.%m.%Y")
@@ -156,11 +174,11 @@ html = f"""
         {hae_kanresta()}
     </div>
     <div class="card">
-        <h2><a href="https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Kielo/Restaurant.aspx" target="_blank" rel="noopener noreferrer">Ravintola Kielo</a></h2>
+        <h2><a href="https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Kielo/Page/Restaurant" target="_blank" rel="noopener noreferrer">Ravintola Kielo</a></h2>
         {hae_kielo()}
     </div>
     <div class="card">
-        <h2><a href="https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Apila/Restaurant.aspx" target="_blank" rel="noopener noreferrer">Ravintola Apila</a></h2>
+        <h2><a href="https://aromimenu.cgisaas.fi/PPSHPAromieMenus/FI/Default/PPSHP/Apila/Page/Restaurant" target="_blank" rel="noopener noreferrer">Ravintola Apila</a></h2>
         {hae_apila()}
     </div>
     <div class="card">
